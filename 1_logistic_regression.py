@@ -1,23 +1,5 @@
 import cupy as cp
-import numpy as np
-import h5py
-import scipy
-
-def load_dataset():
-    train_dataset = h5py.File('datasets/train_catvnoncat.h5', "r")
-    train_set_x_orig = np.array(train_dataset["train_set_x"][:]) # your train set features
-    train_set_y_orig = np.array(train_dataset["train_set_y"][:]) # your train set labels
-
-    test_dataset = h5py.File('datasets/test_catvnoncat.h5', "r")
-    test_set_x_orig = np.array(test_dataset["test_set_x"][:]) # your test set features
-    test_set_y_orig = np.array(test_dataset["test_set_y"][:]) # your test set labels
-
-    classes = np.array(test_dataset["list_classes"][:]) # the list of classes
-    
-    train_set_y_orig = train_set_y_orig.reshape((1, train_set_y_orig.shape[0]))
-    test_set_y_orig = test_set_y_orig.reshape((1, test_set_y_orig.shape[0]))
-    
-    return train_set_x_orig, train_set_y_orig, test_set_x_orig, test_set_y_orig, classes
+from datasets.catvnotcat import load_dataset
 
 def propagate(w, b, X, Y):
     m = X.shape[1]
@@ -71,18 +53,18 @@ def predict(w, b, X):
     return Y_prediction
 
 def model(X_train, Y_train, X_test, Y_test, num_iterations = 3000, learning_rate = 0.5, print_cost = False):
-    ## Initialize parameters
+    # Initialize parameters
     w = cp.zeros((X_train.shape[0], 1))
     b = 0
 
-    # Gradient descent (≈ 1 line of code)
+    # Gradient descent
     parameters, _, costs = optimize(w, b, X_train, Y_train, num_iterations, learning_rate, print_cost)
     
-    # Retrieve parameters w and b from dictionary "parameters"
+    # Retrieve parameters
     w = parameters["w"]
     b = parameters["b"]
     
-    # Predict test/train set examples (≈ 2 lines of code)
+    # Predict test/train set examples
     Y_prediction_test = predict(w, b, X_test)
     Y_prediction_train = predict(w, b, X_train)
 
@@ -90,20 +72,10 @@ def model(X_train, Y_train, X_test, Y_test, num_iterations = 3000, learning_rate
     print("train accuracy: {} %".format(100 - cp.mean(cp.abs(Y_prediction_train - Y_train)) * 100))
     print("test accuracy: {} %".format(100 - cp.mean(cp.abs(Y_prediction_test - Y_test)) * 100))
 
-    d = {"costs": costs,
-         "Y_prediction_test": Y_prediction_test, 
-         "Y_prediction_train" : Y_prediction_train, 
-         "w" : w, 
-         "b" : b,
-         "learning_rate" : learning_rate,
-         "num_iterations": num_iterations}
-    
-    return d
-
 ## Load data set
 train_set_x_orig, train_set_y, test_set_x_orig, test_set_y, classes = load_dataset()
 
-## Convert to cupy (bug preventing direct from h5 to cp)
+## Convert to cupy
 train_set_x_orig = cp.array(train_set_x_orig)
 train_set_y = cp.array(train_set_y)
 test_set_x_orig = cp.array(test_set_x_orig)
@@ -117,10 +89,10 @@ test_set_x_flatten = test_set_x_orig.reshape(test_set_x_orig.shape[0], -1).T
 train_set_x = train_set_x_flatten/255
 test_set_x = test_set_x_flatten/255
 
-d = model(train_set_x,
-          train_set_y,
-          test_set_x,
-          test_set_y,
-          num_iterations = 10000,
-          learning_rate = 0.005,
-          print_cost = True)
+model(train_set_x,
+      train_set_y,
+      test_set_x,
+      test_set_y,
+      num_iterations = 10000,
+      learning_rate = 0.005,
+      print_cost = True)
