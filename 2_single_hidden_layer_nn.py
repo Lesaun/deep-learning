@@ -1,11 +1,7 @@
 import cupy as np
 from datasets.planar import load_planar_dataset
 
-np.random.seed(1)
-
 def initialize_parameters(n_x, n_h, n_y):
-    np.random.seed(2)
-
     W1 = np.random.randn(n_h, n_x) * 0.01
     b1 = np.zeros((n_h, 1))
     W2 = np.random.randn(n_y, n_h) * 0.01
@@ -79,7 +75,6 @@ def update_parameters(params, grads, learning_rate = 1.5):
             'b2': params['b2'] - learning_rate * grads['db2']}
 
 def nn_model(X, Y, n_h, num_iterations = 10000, print_cost=False):
-    np.random.seed(3)
     n_x = X.shape[0]
     n_y = Y.shape[0]
     
